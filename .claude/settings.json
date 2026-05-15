@@ -6,7 +6,8 @@
       "Bash(npx create-expo-app@latest mobile --template blank-typescript)",
       "Bash(npx expo *)",
       "Bash(npm install *)",
-      "Read(//c/Users/Thales Magalh�es/OneDrive/Desktop/roar/mobile/node_modules/expo-font/**)"
+      "Read(//c/Users/Thales Magalh�es/OneDrive/Desktop/roar/mobile/node_modules/expo-font/**)",
+      "Read(//c/Users/Thales Magalh�es/OneDrive/Desktop/**)"
     ]
   }
 }
