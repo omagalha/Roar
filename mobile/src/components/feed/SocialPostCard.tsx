@@ -1,7 +1,10 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { RoarButton } from './RoarButton'
+import { Post } from '@/types/post'
 import { colors, spacing, font, radius } from '@/lib/theme'
+
+export type { Post }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_SIZE = 42
@@ -17,32 +20,19 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d`
 }
 
-export type MockPost = {
-  id: string
-  user: { username: string; flag: string; initial: string }
-  content: string
-  imageUrl?: string | null
-  matchLabel?: string | null
-  isLive?: boolean
-  roarCount: number
-  commentCount: number
-  repostCount: number
-  isRoared: boolean
-  createdAt: string
-}
-
 type Props = {
-  post: MockPost
+  post: Post
+  onToggleRoar: (id: string) => void
   onComment: (id: string) => void
 }
 
-export function SocialPostCard({ post, onComment }: Props) {
+export function SocialPostCard({ post, onToggleRoar, onComment }: Props) {
   return (
     <View style={styles.card}>
       {/* Avatar column */}
       <View style={styles.avatarCol}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{post.user.initial}</Text>
+          <Text style={styles.avatarText}>{post.avatarInitial}</Text>
         </View>
       </View>
 
@@ -50,10 +40,10 @@ export function SocialPostCard({ post, onComment }: Props) {
       <View style={styles.contentCol}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.username}>@{post.user.username}</Text>
-          <Text style={styles.flag}> {post.user.flag}</Text>
+          <Text style={styles.username}>@{post.username}</Text>
+          {post.teamFlag ? <Text style={styles.flag}> {post.teamFlag}</Text> : null}
           {post.isLive && <View style={styles.liveDot} />}
-          <Text style={styles.dot}> · </Text>
+          <Text style={styles.sep}> · </Text>
           <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
         </View>
 
@@ -61,15 +51,10 @@ export function SocialPostCard({ post, onComment }: Props) {
           <Text style={styles.matchLabel} numberOfLines={1}>{post.matchLabel}</Text>
         )}
 
-        {/* Text — fonte maior para posts curtos */}
-        <Text style={[
-          styles.content,
-          post.content.length < 80 && styles.contentLarge,
-        ]}>
-          {post.content}
+        <Text style={[styles.content, post.text.length < 80 && styles.contentLarge]}>
+          {post.text}
         </Text>
 
-        {/* Imagem opcional */}
         {post.imageUrl && (
           <Image
             source={{ uri: post.imageUrl }}
@@ -78,11 +63,12 @@ export function SocialPostCard({ post, onComment }: Props) {
           />
         )}
 
-        {/* Ações */}
+        {/* Actions */}
         <View style={styles.actions}>
           <RoarButton
-            initialCount={post.roarCount}
-            initialRoared={post.isRoared}
+            count={post.roarCount}
+            isRoared={post.isRoared}
+            onPress={() => onToggleRoar(post.id)}
           />
 
           <TouchableOpacity
@@ -91,15 +77,15 @@ export function SocialPostCard({ post, onComment }: Props) {
             activeOpacity={0.7}
           >
             <Ionicons name="chatbubble-outline" size={18} color={colors.muted} />
-            {post.commentCount > 0 && (
-              <Text style={styles.actionCount}>{post.commentCount}</Text>
+            {post.commentsCount > 0 && (
+              <Text style={styles.actionCount}>{post.commentsCount}</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
             <Ionicons name="repeat-outline" size={19} color={colors.muted} />
-            {post.repostCount > 0 && (
-              <Text style={styles.actionCount}>{post.repostCount}</Text>
+            {post.repostsCount > 0 && (
+              <Text style={styles.actionCount}>{post.repostsCount}</Text>
             )}
           </TouchableOpacity>
 
@@ -151,7 +137,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 3,
-    flexWrap: 'nowrap',
   },
   username: {
     color: colors.white,
@@ -159,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: font.size.sm,
   },
   flag: { fontSize: 13 },
-  dot: { color: colors.muted, fontSize: font.size.sm },
+  sep: { color: colors.muted, fontSize: font.size.sm },
   time: { color: colors.muted, fontSize: font.size.sm },
   liveDot: {
     width: 7,

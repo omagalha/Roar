@@ -1,0 +1,92 @@
+{
+  "feed": {
+    "forYou": "Para você",
+    "following": "Seguindo",
+    "live": "Ao vivo",
+    "emptyFollowing": "Siga pessoas para ver o feed",
+    "emptyFollowingDesc": "em breve você poderá seguir torcedores",
+    "emptyLive": "nenhuma partida ao vivo",
+    "emptyLiveDesc": "os posts de jogos em curso aparecerão aqui"
+  },
+  "composer": {
+    "placeholder": "O que você está pensando sobre futebol?",
+    "createPlaceholder": "O que está acontecendo no futebol?"
+  },
+  "actions": {
+    "roar": "Rugir",
+    "roared": "Rugiu",
+    "comment": "Comentar",
+    "repost": "Repostar",
+    "share": "Compartilhar"
+  },
+  "post": {
+    "cancel": "Cancelar",
+    "publish": "Postar",
+    "context": "Contexto",
+    "general": "Geral",
+    "preMatch": "Pré-jogo",
+    "live": "Ao vivo"
+  },
+  "auth": {
+    "enterEmail": "Digite seu e-mail",
+    "enterCode": "Digite o código",
+    "sendCode": "Enviar código",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "signOut": "Sair",
+    "signOutConfirm": "Tem certeza que quer sair?"
+  },
+  "onboarding": {
+    "chooseTeam": "Escolha sua seleção",
+    "username": "Como você se chama?",
+    "continue": "Continuar",
+    "save": "Salvar"
+  },
+  "tabs": {
+    "feed": "Feed",
+    "matches": "Partidas",
+    "profile": "Perfil"
+  },
+  "matches": {
+    "subtitle": "Partidas e torcida ao vivo",
+    "live": "Ao vivo",
+    "upcoming": "Em breve",
+    "finished": "Encerrados",
+    "livePill": "AO VIVO",
+    "upcomingPill": "EM BREVE",
+    "finishedPill": "ENCERRADO",
+    "enterRoom": "Entrar na sala",
+    "setAlert": "Ativar alerta",
+    "bestRoars": "Ver melhores rugidos",
+    "roars": "rugidos",
+    "online": "online",
+    "empty": "nenhuma partida hoje",
+    "notFound": "Partida não encontrada",
+    "back": "Voltar",
+    "recordCelebration": "Gravar comemoração",
+    "viewReactions": "Ver reações",
+    "liveChants": "Torcida ao vivo",
+    "fanMeter": "Rugidômetro",
+    "highlights": "Melhores momentos"
+  },
+  "profile": {
+    "posts": "Posts",
+    "media": "Mídia",
+    "roars": "Rugidos",
+    "postsLabel": "posts",
+    "mediaLabel": "mídias",
+    "receivedLabel": "recebidos",
+    "roarsGivenLabel": "dados",
+    "editProfile": "Editar perfil",
+    "save": "Salvar",
+    "nameLabel": "Nome",
+    "bioLabel": "Bio",
+    "nationalTeamLabel": "Seleção",
+    "favoriteClubLabel": "Time do coração",
+    "changeCover": "Alterar capa",
+    "changePhoto": "Alterar foto",
+    "emptyPosts": "Nenhum post ainda",
+    "emptyMedia": "Nenhuma mídia ainda",
+    "emptyRoars": "Nenhum rugido ainda"
+  }
+}

@@ -1,3 +1,4 @@
+import '@/i18n'
 import { useEffect } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -5,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as Notifications from 'expo-notifications'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/state/auth'
-import { useProfile } from '@/hooks/useProfile'
+import { useProfileStore } from '@/state/profile'
 import { registerForPushNotifications, upsertPushToken, isGoalNotification } from '@/lib/notifications'
 import { colors } from '@/lib/theme'
 
@@ -23,7 +24,7 @@ function AuthProvider() {
   const router = useRouter()
   const segments = useSegments()
   const { setSession, setInitialized, initialized, session } = useAuthStore()
-  const { profile, isLoading: profileLoading } = useProfile()
+  const hasCompletedOnboarding = useProfileStore((s) => s.hasCompletedOnboarding)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -44,7 +45,7 @@ function AuthProvider() {
   }, [])
 
   useEffect(() => {
-    if (!initialized || profileLoading) return
+    if (!initialized) return
 
     const inAuthGroup = segments[0] === '(auth)'
     const inOnboarding = segments[0] === 'onboarding'
@@ -52,12 +53,12 @@ function AuthProvider() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (session && inAuthGroup) {
-      if (profile) router.replace('/(tabs)')
+      if (hasCompletedOnboarding) router.replace('/(tabs)')
       else router.replace('/onboarding')
-    } else if (session && !inAuthGroup && !inOnboarding && !profile) {
+    } else if (session && !inAuthGroup && !inOnboarding && !hasCompletedOnboarding) {
       router.replace('/onboarding')
     }
-  }, [session, initialized, segments, profile, profileLoading])
+  }, [session, initialized, segments, hasCompletedOnboarding])
 
   useEffect(() => {
     // Push tapped enquanto app estava fechado ou em background
@@ -99,6 +100,7 @@ function AuthProvider() {
         <Stack.Screen name="feed/[matchId]" options={{ presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="camera/[matchId]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="create-post" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
     </>
   )

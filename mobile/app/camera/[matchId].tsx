@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera'
 import { VideoView, useVideoPlayer } from 'expo-video'
@@ -22,6 +22,7 @@ type Phase = 'permission' | 'ready' | 'recording' | 'preview' | 'uploading' | 'd
 
 export default function CameraScreen() {
   const { matchId, eventId } = useLocalSearchParams<{ matchId: string; eventId?: string }>()
+  const insets = useSafeAreaInsets()
   const router = useRouter()
   const [permission, requestPermission] = useCameraPermissions()
   const { uploadReaction, state: uploadState, progress } = useUpload()
@@ -193,7 +194,7 @@ export default function CameraScreen() {
       />
 
       {/* Header */}
-      <SafeAreaView style={styles.cameraHeader}>
+      <View style={[styles.cameraHeader, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleClose} hitSlop={12}>
           <Ionicons name="close" size={28} color={colors.white} />
         </TouchableOpacity>
@@ -211,7 +212,7 @@ export default function CameraScreen() {
         >
           <Ionicons name="camera-reverse-outline" size={28} color={colors.white} />
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
 
       {/* Timer bar */}
       {phase === 'recording' && (
@@ -264,7 +265,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
   },
   timerChip: {
     flexDirection: 'row',

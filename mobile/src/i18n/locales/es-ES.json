@@ -1,0 +1,92 @@
+{
+  "feed": {
+    "forYou": "Para ti",
+    "following": "Siguiendo",
+    "live": "En vivo",
+    "emptyFollowing": "Sigue personas para ver tu feed",
+    "emptyFollowingDesc": "seguir hinchas estará disponible pronto",
+    "emptyLive": "ningún partido en vivo",
+    "emptyLiveDesc": "los posts de partidos en curso aparecerán aquí"
+  },
+  "composer": {
+    "placeholder": "¿Qué piensas sobre fútbol?",
+    "createPlaceholder": "¿Qué está pasando en el fútbol?"
+  },
+  "actions": {
+    "roar": "Rugir",
+    "roared": "Rugió",
+    "comment": "Comentar",
+    "repost": "Repostear",
+    "share": "Compartir"
+  },
+  "post": {
+    "cancel": "Cancelar",
+    "publish": "Publicar",
+    "context": "Contexto",
+    "general": "General",
+    "preMatch": "Prepartido",
+    "live": "En vivo"
+  },
+  "auth": {
+    "enterEmail": "Ingresa tu correo",
+    "enterCode": "Ingresa el código",
+    "sendCode": "Enviar código",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "signOut": "Cerrar sesión",
+    "signOutConfirm": "¿Estás seguro de que quieres cerrar sesión?"
+  },
+  "onboarding": {
+    "chooseTeam": "Elige tu selección",
+    "username": "¿Cómo te llamas?",
+    "continue": "Continuar",
+    "save": "Guardar"
+  },
+  "tabs": {
+    "feed": "Feed",
+    "matches": "Partidos",
+    "profile": "Perfil"
+  },
+  "matches": {
+    "subtitle": "Partidos y hinchada en vivo",
+    "live": "En vivo",
+    "upcoming": "Próximamente",
+    "finished": "Finalizados",
+    "livePill": "EN VIVO",
+    "upcomingPill": "PRÓXIMO",
+    "finishedPill": "FINALIZADO",
+    "enterRoom": "Entrar a la sala",
+    "setAlert": "Activar alerta",
+    "bestRoars": "Ver mejores rugidos",
+    "roars": "rugidos",
+    "online": "en línea",
+    "empty": "ningún partido hoy",
+    "notFound": "Partido no encontrado",
+    "back": "Volver",
+    "recordCelebration": "Grabar celebración",
+    "viewReactions": "Ver reacciones",
+    "liveChants": "Hinchada en vivo",
+    "fanMeter": "Fanómetro",
+    "highlights": "Mejores momentos"
+  },
+  "profile": {
+    "posts": "Posts",
+    "media": "Medios",
+    "roars": "Rugidos",
+    "postsLabel": "posts",
+    "mediaLabel": "medios",
+    "receivedLabel": "recibidos",
+    "roarsGivenLabel": "dados",
+    "editProfile": "Editar perfil",
+    "save": "Guardar",
+    "nameLabel": "Nombre",
+    "bioLabel": "Bio",
+    "nationalTeamLabel": "Selección",
+    "favoriteClubLabel": "Club favorito",
+    "changeCover": "Cambiar portada",
+    "changePhoto": "Cambiar foto",
+    "emptyPosts": "Sin posts aún",
+    "emptyMedia": "Sin medios aún",
+    "emptyRoars": "Sin rugidos aún"
+  }
+}

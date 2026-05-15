@@ -8,73 +8,53 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
-import { useProfile } from '@/hooks/useProfile'
+import { useProfileStore } from '@/state/profile'
 import { TEAMS_BY_GROUP, TeamOption } from '@/lib/teams'
 import { colors, spacing, font, radius } from '@/lib/theme'
 
 type Step = 'username' | 'team'
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message
-  if (typeof error === 'string') return error
-  if (error && typeof error === 'object') {
-    const maybeError = error as {
-      message?: unknown
-      details?: unknown
-      hint?: unknown
-      code?: unknown
-    }
-    return [
-      maybeError.message,
-      maybeError.details,
-      maybeError.hint,
-      maybeError.code ? `codigo: ${maybeError.code}` : null,
-    ].filter(Boolean).join(' - ') || 'erro desconhecido'
-  }
-  return 'erro desconhecido'
+function normalizeUsername(raw: string): string {
+  return raw
+    .replace(/^@+/, '')        // remove @ do início
+    .toLowerCase()
+    .replace(/\s+/g, '_')      // espaço → _
+    .replace(/[^a-z0-9_]/g, '') // remove caracteres inválidos
 }
 
 export default function OnboardingScreen() {
   const router = useRouter()
-  const { createProfile, isCreating } = useProfile()
+  const completeOnboarding = useProfileStore((s) => s.completeOnboarding)
   const [step, setStep] = useState<Step>('username')
   const [username, setUsername] = useState('')
   const [selectedTeam, setSelectedTeam] = useState<TeamOption | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  function handleUsernameChange(text: string) {
+    setError(null)
+    setUsername(normalizeUsername(text))
+  }
+
   function handleUsernameNext() {
-    const clean = username.trim().toLowerCase().replace(/\s+/g, '_')
-    if (clean.length < 3) {
+    if (username.length < 3) {
       setError('mínimo 3 caracteres')
       return
     }
     setError(null)
-    setUsername(clean)
     setStep('team')
   }
 
-  async function handleFinish() {
-    try {
-      await createProfile({ username, teamId: selectedTeam?.id ?? null })
-      router.replace('/(tabs)')
-    } catch (e: unknown) {
-      const msg = getErrorMessage(e)
-      if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('23505')) {
-        setError('esse nome já está em uso, tente outro')
-      } else if (msg.includes('foreign key') || msg.includes('23503')) {
-        setError('essa selecao ainda nao existe no banco. Rode as migrations.')
-      } else if (msg.includes('row-level security') || msg.includes('42501')) {
-        setError('permissao do perfil bloqueada. Rode a migration de policy.')
-      } else {
-        setError(msg)
-      }
-      setStep('username')
-    }
+  function handleFinish() {
+    completeOnboarding({
+      username,
+      nationalTeam: selectedTeam ? `${selectedTeam.name} ${selectedTeam.flag}` : '',
+      favoriteClub: '',
+    })
+    router.replace('/(tabs)')
   }
 
   function handleSelectTeam(team: TeamOption) {
@@ -102,25 +82,28 @@ export default function OnboardingScreen() {
               <Text style={styles.subtitle}>seu nome no ROAR</Text>
             </View>
 
-            <TextInput
-              style={styles.input}
-              value={username}
-              onChangeText={(t) => { setUsername(t); setError(null) }}
-              placeholder="seu_nome"
-              placeholderTextColor={colors.muted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoFocus
-              maxLength={24}
-              onSubmitEditing={handleUsernameNext}
-              returnKeyType="next"
-            />
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputPrefix}>@</Text>
+              <TextInput
+                style={styles.input}
+                value={username}
+                onChangeText={handleUsernameChange}
+                placeholder="seu_nome"
+                placeholderTextColor={colors.muted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                maxLength={24}
+                onSubmitEditing={handleUsernameNext}
+                returnKeyType="next"
+              />
+            </View>
             {error && <Text style={styles.error}>{error}</Text>}
 
             <TouchableOpacity
-              style={[styles.button, username.trim().length < 3 && styles.buttonDisabled]}
+              style={[styles.button, username.length < 3 && styles.buttonDisabled]}
               onPress={handleUsernameNext}
-              disabled={username.trim().length < 3}
+              disabled={username.length < 3}
               activeOpacity={0.85}
             >
               <Text style={styles.buttonText}>continuar</Text>
@@ -129,7 +112,7 @@ export default function OnboardingScreen() {
         ) : (
           <View style={styles.stepContainer}>
             <View>
-              <Text style={styles.title}>qual é a sua?</Text>
+              <Text style={styles.title}>quem você vai defender?</Text>
               <Text style={styles.subtitle}>escolha sua seleção favorita</Text>
             </View>
 
@@ -176,22 +159,17 @@ export default function OnboardingScreen() {
                 onPress={() => { setSelectedTeam(null); handleFinish() }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>pular</Text>
+                <Text style={styles.skipText}>Pular por enquanto</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.button, styles.buttonFlex, isCreating && styles.buttonDisabled]}
+                style={[styles.button, styles.buttonFlex]}
                 onPress={handleFinish}
-                disabled={isCreating}
                 activeOpacity={0.85}
               >
-                {isCreating ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={styles.buttonText}>
-                    {selectedTeam ? `vai ${selectedTeam.flag}` : 'confirmar'}
-                  </Text>
-                )}
+                <Text style={styles.buttonText}>
+                  {selectedTeam ? `vai ${selectedTeam.name} ${selectedTeam.flag}` : 'confirmar'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -235,12 +213,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
+  },
+  inputPrefix: {
+    color: colors.muted,
+    fontSize: font.size.lg,
+    marginRight: 4,
+  },
+  input: {
+    flex: 1,
     paddingVertical: spacing.md,
     color: colors.text,
     fontSize: font.size.lg,
@@ -312,5 +300,5 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   skipButton: { paddingVertical: spacing.md, paddingHorizontal: spacing.sm },
-  skipText: { color: colors.muted, fontSize: font.size.sm },
+  skipText: { color: colors.mutedLight, fontSize: font.size.sm },
 })

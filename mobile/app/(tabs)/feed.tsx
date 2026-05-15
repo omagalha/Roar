@@ -1,110 +1,48 @@
 import { useState, useCallback } from 'react'
-import {
-  FlatList, View, Text, StyleSheet,
-  TouchableOpacity,
-} from 'react-native'
+import { FlatList, View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { SocialPostCard, MockPost } from '@/components/feed/SocialPostCard'
+import { useTranslation } from 'react-i18next'
+import { SocialPostCard, Post } from '@/components/feed/SocialPostCard'
 import { ComposerCard } from '@/components/feed/ComposerCard'
 import { CommentsSheet } from '@/components/feed/CommentsSheet'
+import { usePostsStore } from '@/state/posts'
 import { colors, spacing, font } from '@/lib/theme'
-
-// ---------------------------------------------------------------------------
-// Mock data — substituir por hook real quando o banco estiver pronto
-// ---------------------------------------------------------------------------
-const INITIAL_POSTS: MockPost[] = [
-  {
-    id: '1',
-    user: { username: 'thales', flag: '🇧🇷', initial: 'T' },
-    content: 'Brasil hoje joga leve. Se fizer o primeiro, vira goleada.',
-    roarCount: 248,
-    commentCount: 34,
-    repostCount: 12,
-    isRoared: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 14).toISOString(),
-  },
-  {
-    id: '2',
-    user: { username: 'gabi_torcida', flag: '🇧🇷', initial: 'G' },
-    content: 'Não tem coração igual ao do torcedor brasileiro. Copa ou não Copa, a gente sempre vai.',
-    matchLabel: '🇧🇷 Brasil × 🇫🇷 França · Hoje 18h',
-    roarCount: 891,
-    commentCount: 127,
-    repostCount: 64,
-    isRoared: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: '3',
-    user: { username: 'narrador_br', flag: '🇧🇷', initial: 'N' },
-    content: 'Mbappé chega quieto. França vai pesar muito na fase de grupos, cuidado.',
-    roarCount: 156,
-    commentCount: 22,
-    repostCount: 8,
-    isRoared: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: '4',
-    user: { username: 'copa2026', flag: '🌎', initial: 'C' },
-    content: 'Mês mais esperado do mundo. Que comecem os jogos.',
-    isLive: true,
-    matchLabel: '🇦🇷 Argentina × 🇺🇾 Uruguai · AO VIVO 67\'',
-    roarCount: 1204,
-    commentCount: 89,
-    repostCount: 230,
-    isRoared: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: '5',
-    user: { username: 'resenha_futebol', flag: '🇧🇷', initial: 'R' },
-    content: 'Quem não acredita que a Argentina defende o título não entende de futebol. Eles são completos.',
-    roarCount: 432,
-    commentCount: 76,
-    repostCount: 33,
-    isRoared: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-  },
-  {
-    id: '6',
-    user: { username: 'jogo_bonito', flag: '🇵🇹', initial: 'J' },
-    content: 'Portugal sem CR7 na seleção principal vai ser diferente. Mas tem talento de sobra.',
-    roarCount: 319,
-    commentCount: 51,
-    repostCount: 17,
-    isRoared: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 11).toISOString(),
-  },
-]
 
 type Tab = 'foryou' | 'following' | 'live'
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'foryou', label: 'Para você' },
-  { key: 'following', label: 'Seguindo' },
-  { key: 'live', label: '• Ao vivo' },
-]
-
-// ---------------------------------------------------------------------------
 export default function FeedTab() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('foryou')
   const [commentPostId, setCommentPostId] = useState<string | null>(null)
 
-  const visiblePosts = activeTab === 'live'
-    ? INITIAL_POSTS.filter((p) => p.isLive)
-    : activeTab === 'following'
-      ? []
-      : INITIAL_POSTS
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'foryou', label: t('feed.forYou') },
+    { key: 'following', label: t('feed.following') },
+    { key: 'live', label: `• ${t('feed.live')}` },
+  ]
 
-  const renderItem = useCallback(({ item }: { item: MockPost }) => (
-    <SocialPostCard
-      post={item}
-      onComment={setCommentPostId}
-    />
-  ), [])
+  const posts = usePostsStore((s) => s.posts)
+  const toggleRoar = usePostsStore((s) => s.toggleRoar)
+
+  const visiblePosts =
+    activeTab === 'live'
+      ? posts.filter((p) => p.isLive)
+      : activeTab === 'following'
+        ? []
+        : posts
+
+  const renderItem = useCallback(
+    ({ item }: { item: Post }) => (
+      <SocialPostCard
+        post={item}
+        onToggleRoar={toggleRoar}
+        onComment={setCommentPostId}
+      />
+    ),
+    [toggleRoar],
+  )
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -134,27 +72,27 @@ export default function FeedTab() {
         ))}
       </View>
 
-      <FlatList<MockPost>
+      <FlatList<Post>
         data={visiblePosts}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          activeTab === 'foryou' ? (
-            <ComposerCard onPress={() => router.push('/create-post')} />
-          ) : null
+          activeTab === 'foryou'
+            ? <ComposerCard onPress={() => router.push('/create-post')} />
+            : null
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             {activeTab === 'following' ? (
               <>
-                <Text style={styles.emptyTitle}>Siga pessoas para ver o feed</Text>
-                <Text style={styles.emptyDesc}>em breve você poderá seguir torcedores</Text>
+                <Text style={styles.emptyTitle}>{t('feed.emptyFollowing')}</Text>
+                <Text style={styles.emptyDesc}>{t('feed.emptyFollowingDesc')}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.emptyTitle}>nenhuma partida ao vivo</Text>
-                <Text style={styles.emptyDesc}>os posts de jogos em curso aparecerão aqui</Text>
+                <Text style={styles.emptyTitle}>{t('feed.emptyLive')}</Text>
+                <Text style={styles.emptyDesc}>{t('feed.emptyLiveDesc')}</Text>
               </>
             )}
           </View>

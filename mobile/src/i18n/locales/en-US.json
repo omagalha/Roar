@@ -1,0 +1,92 @@
+{
+  "feed": {
+    "forYou": "For you",
+    "following": "Following",
+    "live": "Live",
+    "emptyFollowing": "Follow people to see your feed",
+    "emptyFollowingDesc": "follow supporters coming soon",
+    "emptyLive": "no live matches",
+    "emptyLiveDesc": "posts from ongoing matches will appear here"
+  },
+  "composer": {
+    "placeholder": "What are you thinking about football?",
+    "createPlaceholder": "What's happening in football?"
+  },
+  "actions": {
+    "roar": "Roar",
+    "roared": "Roared",
+    "comment": "Comment",
+    "repost": "Repost",
+    "share": "Share"
+  },
+  "post": {
+    "cancel": "Cancel",
+    "publish": "Post",
+    "context": "Context",
+    "general": "General",
+    "preMatch": "Pre-match",
+    "live": "Live"
+  },
+  "auth": {
+    "enterEmail": "Enter your e-mail",
+    "enterCode": "Enter the code",
+    "sendCode": "Send code",
+    "confirm": "Confirm",
+    "back": "Back",
+    "signOut": "Sign out",
+    "signOutConfirm": "Are you sure you want to sign out?"
+  },
+  "onboarding": {
+    "chooseTeam": "Choose your team",
+    "username": "What's your name?",
+    "continue": "Continue",
+    "save": "Save"
+  },
+  "tabs": {
+    "feed": "Feed",
+    "matches": "Matches",
+    "profile": "Profile"
+  },
+  "matches": {
+    "subtitle": "Matches and live chants",
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "finished": "Finished",
+    "livePill": "LIVE",
+    "upcomingPill": "UPCOMING",
+    "finishedPill": "FINISHED",
+    "enterRoom": "Enter room",
+    "setAlert": "Set alert",
+    "bestRoars": "See best roars",
+    "roars": "roars",
+    "online": "online",
+    "empty": "no matches today",
+    "notFound": "Match not found",
+    "back": "Back",
+    "recordCelebration": "Record celebration",
+    "viewReactions": "View reactions",
+    "liveChants": "Live chants",
+    "fanMeter": "Fan meter",
+    "highlights": "Best moments"
+  },
+  "profile": {
+    "posts": "Posts",
+    "media": "Media",
+    "roars": "Roars",
+    "postsLabel": "posts",
+    "mediaLabel": "media",
+    "receivedLabel": "received",
+    "roarsGivenLabel": "given",
+    "editProfile": "Edit profile",
+    "save": "Save",
+    "nameLabel": "Name",
+    "bioLabel": "Bio",
+    "nationalTeamLabel": "National team",
+    "favoriteClubLabel": "Favorite club",
+    "changeCover": "Change cover",
+    "changePhoto": "Change photo",
+    "emptyPosts": "No posts yet",
+    "emptyMedia": "No media yet",
+    "emptyRoars": "No roars yet"
+  }
+}

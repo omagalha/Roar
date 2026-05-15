@@ -1,74 +1,69 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native'
+import { useCallback } from 'react'
+import { View, Text, FlatList, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useMatches } from '@/hooks/useMatches'
-import { MatchCard } from '@/components/matches/MatchCard'
-import { MatchCardSkeleton } from '@/components/ui/Skeleton'
-import { MatchWithTeams } from '@/types/database'
+import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
+import { useLiveMatchesStore } from '@/state/liveMatches'
+import { LiveMatchCard } from '@/components/matches/LiveMatchCard'
+import { Match } from '@/types/match'
 import { colors, spacing, font } from '@/lib/theme'
 
+type ListItem =
+  | { type: 'header'; id: string; title: string }
+  | { type: 'match'; id: string; match: Match }
+  | { type: 'empty'; id: string }
+
 export default function MatchesScreen() {
-  const { data: matches, isLoading, refetch, isRefetching } = useMatches()
+  const { t } = useTranslation()
+  const router = useRouter()
+  const matches = useLiveMatchesStore((s) => s.matches)
 
-  const live = matches?.filter((m) => m.status === 'LIVE' || m.status === 'HT') ?? []
-  const upcoming = matches?.filter((m) => m.status === 'NS') ?? []
-  const finished = matches?.filter((m) => m.status === 'FT') ?? []
+  const live = matches.filter((m) => m.status === 'live')
+  const upcoming = matches.filter((m) => m.status === 'upcoming')
+  const finished = matches.filter((m) => m.status === 'finished')
 
-  const sections: Array<{ title: string; data: MatchWithTeams[] }> = [
-    ...(live.length ? [{ title: 'AO VIVO', data: live }] : []),
-    ...(upcoming.length ? [{ title: 'EM BREVE', data: upcoming }] : []),
-    ...(finished.length ? [{ title: 'ENCERRADOS', data: finished }] : []),
+  const sections: Array<{ key: string; title: string; data: Match[] }> = [
+    ...(live.length ? [{ key: 'live', title: t('matches.live'), data: live }] : []),
+    ...(upcoming.length ? [{ key: 'upcoming', title: t('matches.upcoming'), data: upcoming }] : []),
+    ...(finished.length ? [{ key: 'finished', title: t('matches.finished'), data: finished }] : []),
   ]
 
-  const items = sections.flatMap((s) => [
-    { type: 'header' as const, title: s.title, id: `h-${s.title}` },
-    ...s.data.map((m) => ({ type: 'match' as const, match: m, id: m.id })),
+  const items: ListItem[] = sections.flatMap((s) => [
+    { type: 'header', id: `h-${s.key}`, title: s.title },
+    ...s.data.map((m) => ({ type: 'match' as const, id: m.id, match: m })),
   ])
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.topBar}>
-          <Text style={styles.appName}>ROAR</Text>
-          <Text style={styles.subtitle}>Copa do Mundo 2026</Text>
-        </View>
-        <View style={{ padding: spacing.lg }}>
-          {[1, 2, 3].map((i) => <MatchCardSkeleton key={i} />)}
-        </View>
-      </SafeAreaView>
-    )
-  }
+  const handlePress = useCallback(
+    (id: string) => router.push(`/match/${id}` as never),
+    [router],
+  )
+
+  const renderItem = useCallback(
+    ({ item }: { item: ListItem }) => {
+      if (item.type === 'header') {
+        return <Text style={styles.sectionHeader}>{item.title}</Text>
+      }
+      return <LiveMatchCard match={item.match} onPress={handlePress} />
+    },
+    [handlePress],
+  )
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.appName}>ROAR</Text>
-        <Text style={styles.subtitle}>Copa do Mundo 2026</Text>
+        <Text style={styles.subtitle}>{t('matches.subtitle')}</Text>
       </View>
 
-      <FlatList
+      <FlatList<ListItem>
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={colors.red}
-            colors={[colors.red]}
-          />
-        }
-        renderItem={({ item }) => {
-          if (item.type === 'header') {
-            return (
-              <Text style={styles.sectionHeader}>{item.title}</Text>
-            )
-          }
-          return <MatchCard match={item.match} />
-        }}
+        renderItem={renderItem}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.empty}>nenhuma partida hoje</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>{t('matches.empty')}</Text>
           </View>
         }
       />
@@ -97,12 +92,13 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: font.size.xs,
     color: colors.muted,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginTop: 2,
   },
   list: {
     padding: spacing.lg,
+    paddingBottom: spacing.lg * 2,
   },
   sectionHeader: {
     fontSize: font.size.xs,
@@ -113,13 +109,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginTop: spacing.md,
   },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  emptyContainer: {
     paddingTop: 80,
+    alignItems: 'center',
   },
-  empty: {
+  emptyText: {
     color: colors.muted,
     fontSize: font.size.md,
   },

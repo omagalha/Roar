@@ -1,5 +1,6 @@
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
 import { useProfile } from '@/hooks/useProfile'
 import { colors, spacing, font } from '@/lib/theme'
 
@@ -8,18 +9,19 @@ type Props = {
 }
 
 export function ComposerCard({ onPress }: Props) {
+  const { t } = useTranslation()
   const { profile } = useProfile()
   const initial = (profile?.username ?? '?')[0].toUpperCase()
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
       <Text style={styles.placeholder} numberOfLines={1}>
-        O que você está pensando sobre futebol?
+        {t('composer.placeholder')}
       </Text>
-      <Ionicons name="image-outline" size={20} color={colors.muted} />
+      <Ionicons name="image-outline" size={21} color={colors.mutedLight} />
     </TouchableOpacity>
   )
 }
@@ -30,15 +32,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 4,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.red,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.red,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -50,7 +54,7 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
-    color: colors.muted,
+    color: colors.mutedLight,
     fontSize: font.size.md,
   },
 })

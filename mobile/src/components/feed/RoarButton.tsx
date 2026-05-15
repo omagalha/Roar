@@ -1,15 +1,16 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 import { colors, font } from '@/lib/theme'
 import { RoarIcon } from '@/components/brand/RoarIcon'
 
-const INACTIVE = colors.subtle
+const INACTIVE = colors.mutedLight
 
 type Props = {
-  initialCount: number
-  initialRoared?: boolean
-  onChange?: (roared: boolean) => void
+  count: number
+  isRoared: boolean
+  onPress: () => void
 }
 
 function formatCount(value: number): string {
@@ -18,9 +19,8 @@ function formatCount(value: number): string {
   return String(value)
 }
 
-export function RoarButton({ initialCount, initialRoared = false, onChange }: Props) {
-  const [roared, setRoared] = useState(initialRoared)
-  const [count, setCount] = useState(initialCount)
+export function RoarButton({ count, isRoared, onPress }: Props) {
+  const { t } = useTranslation()
   const scale = useRef(new Animated.Value(1)).current
 
   function animate() {
@@ -31,28 +31,25 @@ export function RoarButton({ initialCount, initialRoared = false, onChange }: Pr
   }
 
   async function handlePress() {
-    const next = !roared
-    setRoared(next)
-    setCount((c) => c + (next ? 1 : -1))
     animate()
-    if (next) await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    onChange?.(next)
+    if (!isRoared) await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    onPress()
   }
 
   return (
     <Pressable onPress={handlePress} hitSlop={10}>
       <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
         <RoarIcon
-          size={20}
-          color={roared ? colors.white : INACTIVE}
-          filled={roared}
+          size={22}
+          color={isRoared ? colors.white : INACTIVE}
+          filled={isRoared}
         />
         <View style={styles.textRow}>
-          <Text style={[styles.label, roared && styles.labelActive]}>
-            {roared ? 'Rugiu' : 'Rugir'}
+          <Text style={[styles.label, isRoared && styles.labelActive]}>
+            {isRoared ? t('actions.roared') : t('actions.roar')}
           </Text>
-          <Text style={[styles.dot, roared && styles.dotActive]}>·</Text>
-          <Text style={[styles.count, roared && styles.countActive]}>
+          <Text style={[styles.dot, isRoared && styles.dotActive]}>·</Text>
+          <Text style={[styles.count, isRoared && styles.countActive]}>
             {formatCount(count)}
           </Text>
         </View>
