@@ -9,6 +9,7 @@ export const colors = {
   card: '#0d0d1a',
   border: '#1a1a2e',
   muted: '#55557a',
+  subtle: '#6E6A8A',
   text: '#e0e0f0',
   white: '#ffffff',
 } as const

@@ -33,11 +33,10 @@ export type MockPost = {
 
 type Props = {
   post: MockPost
-  onRoar: (id: string) => void
   onComment: (id: string) => void
 }
 
-export function SocialPostCard({ post, onRoar, onComment }: Props) {
+export function SocialPostCard({ post, onComment }: Props) {
   return (
     <View style={styles.card}>
       {/* Avatar column */}
@@ -82,9 +81,8 @@ export function SocialPostCard({ post, onRoar, onComment }: Props) {
         {/* Ações */}
         <View style={styles.actions}>
           <RoarButton
-            count={post.roarCount}
-            isRoared={post.isRoared}
-            onPress={() => onRoar(post.id)}
+            initialCount={post.roarCount}
+            initialRoared={post.isRoared}
           />
 
           <TouchableOpacity

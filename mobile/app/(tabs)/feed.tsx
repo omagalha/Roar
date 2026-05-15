@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import {
   FlatList, View, Text, StyleSheet,
-  TouchableOpacity, ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -91,29 +91,17 @@ const TABS: { key: Tab; label: string }[] = [
 export default function FeedTab() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('foryou')
-  const [posts, setPosts] = useState<MockPost[]>(INITIAL_POSTS)
   const [commentPostId, setCommentPostId] = useState<string | null>(null)
 
-  function handleRoar(id: string) {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, isRoared: !p.isRoared, roarCount: p.isRoared ? p.roarCount - 1 : p.roarCount + 1 }
-          : p,
-      ),
-    )
-  }
-
   const visiblePosts = activeTab === 'live'
-    ? posts.filter((p) => p.isLive)
+    ? INITIAL_POSTS.filter((p) => p.isLive)
     : activeTab === 'following'
       ? []
-      : posts
+      : INITIAL_POSTS
 
   const renderItem = useCallback(({ item }: { item: MockPost }) => (
     <SocialPostCard
       post={item}
-      onRoar={handleRoar}
       onComment={setCommentPostId}
     />
   ), [])
