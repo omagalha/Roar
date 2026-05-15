@@ -1,0 +1,31 @@
+insert into public.teams (id, name, country, badge_url)
+values
+  ('BR', 'Brasil', 'BR', null),
+  ('AR', 'Argentina', 'AR', null),
+  ('UY', 'Uruguai', 'UY', null),
+  ('CO', 'Colombia', 'CO', null),
+  ('EC', 'Equador', 'EC', null),
+  ('VE', 'Venezuela', 'VE', null),
+  ('FR', 'Franca', 'FR', null),
+  ('ES', 'Espanha', 'ES', null),
+  ('DE', 'Alemanha', 'DE', null),
+  ('PT', 'Portugal', 'PT', null),
+  ('EN', 'Inglaterra', 'GB', null),
+  ('IT', 'Italia', 'IT', null),
+  ('NL', 'Holanda', 'NL', null),
+  ('BE', 'Belgica', 'BE', null),
+  ('HR', 'Croacia', 'HR', null),
+  ('US', 'EUA', 'US', null),
+  ('MX', 'Mexico', 'MX', null),
+  ('CA', 'Canada', 'CA', null),
+  ('MA', 'Marrocos', 'MA', null),
+  ('SN', 'Senegal', 'SN', null),
+  ('NG', 'Nigeria', 'NG', null),
+  ('JP', 'Japao', 'JP', null),
+  ('KR', 'Coreia do Sul', 'KR', null),
+  ('SA', 'Arabia Saudita', 'SA', null),
+  ('AU', 'Australia', 'AU', null)
+on conflict (id) do update set
+  name = excluded.name,
+  country = excluded.country,
+  badge_url = excluded.badge_url;

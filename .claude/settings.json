@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\Repositorio\\\\claude-cookbooks-main\")",
+      "Read(//c/Users/Thales Magalhães/OneDrive/Desktop/Repositorio/claude-cookbooks-main/**)",
+      "Bash(npx create-expo-app@latest mobile --template blank-typescript)",
+      "Bash(npx expo *)",
+      "Bash(npm install *)",
+      "Read(//c/Users/Thales Magalh�es/OneDrive/Desktop/roar/mobile/node_modules/expo-font/**)"
+    ]
+  }
+}

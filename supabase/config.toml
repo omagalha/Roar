@@ -1,0 +1,8 @@
+[functions.goal-worker]
+verify_jwt = false
+
+[functions.simulate-goal]
+verify_jwt = false
+
+[functions.mvp-health]
+verify_jwt = false
