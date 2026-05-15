@@ -257,15 +257,49 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          content: string
+          created_at?: string
+        }
+        Update: Record<string, never>
+        Relationships: [
+          {
+            foreignKeyName: 'comments_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'posts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comments_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       posts: {
         Row: {
           id: string
           user_id: string
           match_id: string | null
           caption: string | null
-          image_url: string
+          image_url: string | null
           storage_path: string | null
           score: number
+          comments_count: number
           created_at: string
         }
         Insert: {
@@ -273,9 +307,10 @@ export type Database = {
           user_id: string
           match_id?: string | null
           caption?: string | null
-          image_url: string
+          image_url?: string | null
           storage_path?: string | null
           score?: number
+          comments_count?: number
           created_at?: string
         }
         Update: {
@@ -369,7 +404,7 @@ export type Database = {
       }
       create_post: {
         Args: {
-          target_image_url: string
+          target_image_url?: string | null
           target_caption?: string | null
           target_match_id?: string | null
           target_storage_path?: string | null
@@ -392,6 +427,7 @@ export type MatchSubscription = Tables<'match_subscriptions'>
 export type PushToken = Tables<'push_tokens'>
 export type Post = Tables<'posts'>
 export type PostLike = Tables<'post_likes'>
+export type Comment = Tables<'comments'>
 
 export type MatchWithTeams = Match & {
   home_team: Team

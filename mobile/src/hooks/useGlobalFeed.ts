@@ -9,6 +9,7 @@ const PAGE_SIZE = 15
 export type PostWithProfile = Post & {
   profile?: { username: string; avatar_url: string | null }
   match?: { id: string; home_team: { name: string; country: string }; away_team: { name: string; country: string } } | null
+  comments_count?: number
 }
 
 async function fetchFeed(cursor?: string): Promise<PostWithProfile[]> {

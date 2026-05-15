@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import {
   FlatList, View, Text, StyleSheet,
   TouchableOpacity, ActivityIndicator, RefreshControl,
@@ -8,14 +8,21 @@ import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useGlobalFeed, PostWithProfile } from '@/hooks/useGlobalFeed'
 import { PostCard } from '@/components/feed/PostCard'
+import { CommentsSheet } from '@/components/feed/CommentsSheet'
 import { colors, spacing, font } from '@/lib/theme'
 
 export default function FeedTab() {
   const router = useRouter()
   const { posts, isLoading, refetch, fetchNextPage, hasNextPage, like, isLiked } = useGlobalFeed()
+  const [commentPostId, setCommentPostId] = useState<string | null>(null)
 
   const renderItem = useCallback(({ item }: { item: PostWithProfile }) => (
-    <PostCard post={item} isLiked={isLiked(item.id)} onLike={like} />
+    <PostCard
+      post={item}
+      isLiked={isLiked(item.id)}
+      onLike={like}
+      onComment={setCommentPostId}
+    />
   ), [like, isLiked])
 
   if (isLoading) {
@@ -72,6 +79,14 @@ export default function FeedTab() {
           </View>
         }
       />
+
+      {commentPostId && (
+        <CommentsSheet
+          postId={commentPostId}
+          visible={true}
+          onClose={() => setCommentPostId(null)}
+        />
+      )}
     </SafeAreaView>
   )
 }
