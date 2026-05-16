@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -13,28 +16,18 @@ import { useTranslation } from 'react-i18next'
 import * as Haptics from 'expo-haptics'
 import { useLiveMatchesStore } from '@/state/liveMatches'
 import { useProfileStore } from '@/state/profile'
+import { useMatchChatStore } from '@/state/matchChat'
 import { MatchStatusPill } from '@/components/matches/MatchStatusPill'
 import { Match } from '@/types/match'
 import { colors, spacing, font, radius } from '@/lib/theme'
 
-// ── Mock data helpers ────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getFanSupport(match: Match): { home: number; away: number } {
   if (match.homeScore > match.awayScore) return { home: 62, away: 38 }
   if (match.awayScore > match.homeScore) return { home: 38, away: 62 }
-  const swing = match.roarCount % 21 - 10 // -10..+10 determinístico
+  const swing = match.roarCount % 21 - 10
   return { home: 50 + swing, away: 50 - swing }
-}
-
-type MockComment = { id: string; handle: string; text: string }
-
-function getMockComments(match: Match): MockComment[] {
-  return [
-    { id: '1', handle: '@thales', text: `hoje é nosso! vai ${match.homeTeam.name}! 🔥` },
-    { id: '2', handle: '@gabi_torcida', text: 'ninguém segura essa torcida' },
-    { id: '3', handle: '@narrador_br', text: 'jogo quente demais 😤' },
-    { id: '4', handle: '@torcedor10', text: `${match.awayTeam.name} tá sofrendo hoje` },
-  ]
 }
 
 type MockEvent = { id: string; time: string; description: string }
@@ -94,12 +87,22 @@ export default function MatchRoomScreen() {
   const router = useRouter()
   const { t } = useTranslation()
   const match = useLiveMatchesStore((s) => s.matches.find((m) => m.id === id))
-  const nationalTeam = useProfileStore((s) => s.profile.nationalTeam)
+  const profile = useProfileStore((s) => s.profile)
+  const { getMessages, addMessage, seedMessages } = useMatchChatStore()
 
   const initialSupport = match ? getFanSupport(match) : { home: 50, away: 50 }
   const [fanHome, setFanHome] = useState(initialSupport.home)
   const [fanAway, setFanAway] = useState(initialSupport.away)
   const [hasRoared, setHasRoared] = useState(false)
+  const [chatText, setChatText] = useState('')
+  const scrollRef = useRef<ScrollView>(null)
+  const chatScrollRef = useRef<ScrollView>(null)
+
+  useEffect(() => {
+    if (match) {
+      seedMessages(match.id, match.homeTeam.name, match.awayTeam.name)
+    }
+  }, [match?.id])
 
   // ── Not found ──
   if (!match) {
@@ -119,11 +122,21 @@ export default function MatchRoomScreen() {
   const isLive = match.status === 'live'
   const isFinished = match.status === 'finished'
 
-  const teamNameLower = nationalTeam.toLowerCase()
-  const matchesAway = teamNameLower.length > 0 && teamNameLower.includes(match.awayTeam.name.toLowerCase())
-  const matchesHome = teamNameLower.length > 0 && teamNameLower.includes(match.homeTeam.name.toLowerCase())
-  const roarForHome = matchesHome || (!matchesAway)
+  const nationalTeamLower = profile.nationalTeam.toLowerCase()
+  const matchesAway = nationalTeamLower.length > 0 && nationalTeamLower.includes(match.awayTeam.name.toLowerCase())
+  const matchesHome = nationalTeamLower.length > 0 && nationalTeamLower.includes(match.homeTeam.name.toLowerCase())
+  const roarForHome = matchesHome || !matchesAway
   const roarTeam = roarForHome ? match.homeTeam : match.awayTeam
+
+  const roarPhrase =
+    match.homeScore > match.awayScore
+      ? `${match.homeTeam.name} está rugindo mais alto.`
+      : match.awayScore > match.homeScore
+        ? `${match.awayTeam.name} está rugindo mais alto.`
+        : 'As torcidas estão rugindo juntas.'
+
+  const messages = getMessages(match.id)
+  const events = getMockEvents(match)
 
   function handleRoar() {
     if (hasRoared) return
@@ -138,15 +151,23 @@ export default function MatchRoomScreen() {
     setHasRoared(true)
   }
 
-  const roarPhrase =
-    match.homeScore > match.awayScore
-      ? `${match.homeTeam.name} está rugindo mais alto.`
-      : match.awayScore > match.homeScore
-        ? `${match.awayTeam.name} está rugindo mais alto.`
-        : 'As torcidas estão rugindo juntas.'
-
-  const comments = getMockComments(match)
-  const events = getMockEvents(match)
+  function handleSend() {
+    const trimmed = chatText.trim()
+    if (!trimmed) return
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    const username = profile.username || 'anônimo'
+    const avatarInitial = profile.avatarInitial || username[0]?.toUpperCase() || '?'
+    const teamFlag =
+      profile.nationalTeam
+        ? match.homeTeam.name.toLowerCase() === profile.nationalTeam.toLowerCase()
+          ? match.homeTeam.flag
+          : match.awayTeam.name.toLowerCase() === profile.nationalTeam.toLowerCase()
+            ? match.awayTeam.flag
+            : undefined
+        : undefined
+    addMessage(match.id, trimmed, { username, avatarInitial, teamFlag })
+    setChatText('')
+  }
 
   function handleCTA() {
     if (isLive) router.push(`/camera/${id}` as never)
@@ -161,152 +182,198 @@ export default function MatchRoomScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="arrow-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <MatchStatusPill status={match.status} />
-          {isLive && match.minute !== undefined && (
-            <Text style={styles.headerMinute}>{match.minute}'</Text>
-          )}
-        </View>
-
-        <View style={styles.onlineChip}>
-          <View style={styles.onlineDot} />
-          <Text style={styles.onlineText}>
-            {formatCount(match.onlineCount)} {t('matches.online')}
-          </Text>
-        </View>
-      </View>
-
-      {/* ── Score hero ── */}
-      <View style={[styles.scoreSection, isLive && styles.scoreSectionLive]}>
-        <View style={styles.teamBlock}>
-          <Text style={styles.flag}>{match.homeTeam.flag}</Text>
-          <Text style={styles.teamName}>{match.homeTeam.name}</Text>
-        </View>
-
-        <View style={styles.scoreBlock}>
-          {match.status !== 'upcoming' ? (
-            <Text style={[styles.scoreText, isLive && styles.scoreTextLive]}>
-              {match.homeScore}
-              <Text style={styles.scoreSep}> — </Text>
-              {match.awayScore}
-            </Text>
-          ) : (
-            <Text style={styles.vsText}>vs</Text>
-          )}
-        </View>
-
-        <View style={[styles.teamBlock, styles.teamBlockRight]}>
-          <Text style={styles.flag}>{match.awayTeam.flag}</Text>
-          <Text style={[styles.teamName, styles.teamNameRight]}>{match.awayTeam.name}</Text>
-        </View>
-      </View>
-
-      {/* ── Roar phrase ── */}
-      {match.status !== 'upcoming' && (
-        <View style={styles.phraseRow}>
-          <Text style={styles.phraseText}>{roarPhrase}</Text>
-        </View>
-      )}
-
-      {/* ── Meta row ── */}
-      <View style={styles.metaRow}>
-        <Text style={styles.metaText}>
-          🔥 {formatCount(match.roarCount)} {t('matches.roars')}
-        </Text>
-      </View>
-
-      {/* ── Scrollable sections ── */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
-        {/* Rugidômetro */}
-        <SectionCard title={t('matches.fanMeter')}>
-          <View style={styles.fanRow}>
-            <Text style={styles.fanTeam}>{match.homeTeam.flag} {match.homeTeam.shortName}</Text>
-            <Text style={styles.fanPct}>{fanHome}%</Text>
-          </View>
-          <View style={styles.fanBar}>
-            <View style={[styles.fanBarHome, { flex: fanHome }]} />
-            <View style={[styles.fanBarAway, { flex: fanAway }]} />
-          </View>
-          <View style={styles.fanRow}>
-            <Text style={styles.fanTeam}>{match.awayTeam.flag} {match.awayTeam.shortName}</Text>
-            <Text style={styles.fanPct}>{fanAway}%</Text>
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
+          </TouchableOpacity>
+
+          <View style={styles.headerCenter}>
+            <MatchStatusPill status={match.status} />
+            {isLive && match.minute !== undefined && (
+              <Text style={styles.headerMinute}>{match.minute}'</Text>
+            )}
           </View>
 
+          <View style={styles.onlineChip}>
+            <View style={styles.onlineDot} />
+            <Text style={styles.onlineText}>
+              {formatCount(match.onlineCount)} {t('matches.online')}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Score hero ── */}
+        <View style={[styles.scoreSection, isLive && styles.scoreSectionLive]}>
+          <View style={styles.teamBlock}>
+            <Text style={styles.flag}>{match.homeTeam.flag}</Text>
+            <Text style={styles.teamName}>{match.homeTeam.name}</Text>
+          </View>
+
+          <View style={styles.scoreBlock}>
+            {match.status !== 'upcoming' ? (
+              <Text style={[styles.scoreText, isLive && styles.scoreTextLive]}>
+                {match.homeScore}
+                <Text style={styles.scoreSep}> — </Text>
+                {match.awayScore}
+              </Text>
+            ) : (
+              <Text style={styles.vsText}>vs</Text>
+            )}
+          </View>
+
+          <View style={[styles.teamBlock, styles.teamBlockRight]}>
+            <Text style={styles.flag}>{match.awayTeam.flag}</Text>
+            <Text style={[styles.teamName, styles.teamNameRight]}>{match.awayTeam.name}</Text>
+          </View>
+        </View>
+
+        {/* ── Roar phrase ── */}
+        {match.status !== 'upcoming' && (
+          <View style={styles.phraseRow}>
+            <Text style={styles.phraseText}>{roarPhrase}</Text>
+          </View>
+        )}
+
+        {/* ── Meta row ── */}
+        <View style={styles.metaRow}>
+          <Text style={styles.metaText}>
+            🔥 {formatCount(match.roarCount)} {t('matches.roars')}
+          </Text>
+        </View>
+
+        {/* ── Scrollable sections ── */}
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Rugidômetro */}
+          <SectionCard title={t('matches.fanMeter')}>
+            <View style={styles.fanRow}>
+              <Text style={styles.fanTeam}>{match.homeTeam.flag} {match.homeTeam.shortName}</Text>
+              <Text style={styles.fanPct}>{fanHome}%</Text>
+            </View>
+            <View style={styles.fanBar}>
+              <View style={[styles.fanBarHome, { flex: fanHome }]} />
+              <View style={[styles.fanBarAway, { flex: fanAway }]} />
+            </View>
+            <View style={styles.fanRow}>
+              <Text style={styles.fanTeam}>{match.awayTeam.flag} {match.awayTeam.shortName}</Text>
+              <Text style={styles.fanPct}>{fanAway}%</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.roarButton, hasRoared && styles.roarButtonDone]}
+              onPress={handleRoar}
+              activeOpacity={hasRoared ? 1 : 0.75}
+              disabled={hasRoared}
+            >
+              <Text style={[styles.roarButtonText, hasRoared && styles.roarButtonTextDone]}>
+                {hasRoared
+                  ? `✓ Você rugiu pelo ${roarTeam.name} ${roarTeam.flag}`
+                  : `🦁 Rugir pelo ${roarTeam.name} ${roarTeam.flag}`}
+              </Text>
+            </TouchableOpacity>
+          </SectionCard>
+
+          {/* Torcida ao vivo */}
+          <View style={styles.liveChatCard}>
+            <Text style={styles.liveChatTitle}>{t('matches.liveChants')}</Text>
+
+            <ScrollView
+              ref={chatScrollRef}
+              style={styles.chatScroll}
+              contentContainerStyle={styles.chatScrollContent}
+              showsVerticalScrollIndicator
+              onContentSizeChange={() => chatScrollRef.current?.scrollToEnd({ animated: true })}
+              keyboardShouldPersistTaps="handled"
+            >
+              {messages.map((msg, i) => (
+                <View key={msg.id} style={[styles.commentItem, i > 0 && styles.commentItemBorder]}>
+                  <Text style={styles.commentHandle}>
+                    @{msg.username}{msg.teamFlag ? ` ${msg.teamFlag}` : ''}
+                  </Text>
+                  <Text style={styles.commentText}>{msg.text}</Text>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={styles.chatInputRow}>
+              <TextInput
+                style={styles.chatInput}
+                value={chatText}
+                onChangeText={setChatText}
+                placeholder={t('matches.chatPlaceholder')}
+                placeholderTextColor={colors.mutedLight}
+                returnKeyType="send"
+                onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+              />
+              <TouchableOpacity
+                style={[styles.chatSendBtn, !chatText.trim() && styles.chatSendBtnDisabled]}
+                onPress={handleSend}
+                disabled={!chatText.trim()}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name="send"
+                  size={15}
+                  color={chatText.trim() ? colors.red : colors.muted}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Melhores momentos */}
+          <SectionCard title={t('matches.highlights')}>
+            {events.map((e) => (
+              <View key={e.id} style={styles.eventRow}>
+                <Text style={styles.eventTime}>{e.time}</Text>
+                <Text style={styles.eventDesc}>{e.description}</Text>
+              </View>
+            ))}
+          </SectionCard>
+        </ScrollView>
+
+        {/* ── Footer CTA ── */}
+        <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.roarButton, hasRoared && styles.roarButtonDone]}
-            onPress={handleRoar}
-            activeOpacity={hasRoared ? 1 : 0.75}
-            disabled={hasRoared}
+            style={[
+              styles.ctaButton,
+              !isLive && !isFinished && styles.ctaButtonOutline,
+            ]}
+            onPress={handleCTA}
+            activeOpacity={0.85}
+            disabled={!isLive && !isFinished}
           >
-            <Text style={[styles.roarButtonText, hasRoared && styles.roarButtonTextDone]}>
-              {hasRoared
-                ? `✓ Você rugiu pelo ${roarTeam.name} ${roarTeam.flag}`
-                : `🦁 Rugir pelo ${roarTeam.name} ${roarTeam.flag}`}
+            {isLive && (
+              <Ionicons name="camera" size={18} color={colors.white} />
+            )}
+            <Text style={[styles.ctaText, !isLive && !isFinished && styles.ctaTextMuted]}>
+              {ctaLabel}
             </Text>
           </TouchableOpacity>
-        </SectionCard>
 
-        {/* Torcida ao vivo */}
-        <SectionCard title={t('matches.liveChants')}>
-          {comments.map((c, i) => (
-            <View key={c.id} style={[styles.commentItem, i > 0 && styles.commentItemBorder]}>
-              <Text style={styles.commentHandle}>{c.handle}</Text>
-              <Text style={styles.commentText}>{c.text}</Text>
-            </View>
-          ))}
-        </SectionCard>
-
-        {/* Melhores momentos */}
-        <SectionCard title={t('matches.highlights')}>
-          {events.map((e) => (
-            <View key={e.id} style={styles.eventRow}>
-              <Text style={styles.eventTime}>{e.time}</Text>
-              <Text style={styles.eventDesc}>{e.description}</Text>
-            </View>
-          ))}
-        </SectionCard>
-      </ScrollView>
-
-      {/* ── Footer CTA ── */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.ctaButton,
-            !isLive && !isFinished && styles.ctaButtonOutline,
-          ]}
-          onPress={handleCTA}
-          activeOpacity={0.85}
-          disabled={!isLive && !isFinished}
-        >
-          {isLive && (
-            <Ionicons name="camera" size={18} color={colors.white} />
+          {(isLive || isFinished) && (
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => router.push(`/feed/${id}` as never)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="play-circle-outline" size={18} color={colors.text} />
+              <Text style={styles.secondaryText}>{t('matches.viewReactions')}</Text>
+            </TouchableOpacity>
           )}
-          <Text style={[styles.ctaText, !isLive && !isFinished && styles.ctaTextMuted]}>
-            {ctaLabel}
-          </Text>
-        </TouchableOpacity>
-
-        {(isLive || isFinished) && (
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push(`/feed/${id}` as never)}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="play-circle-outline" size={18} color={colors.text} />
-            <Text style={styles.secondaryText}>{t('matches.viewReactions')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -315,6 +382,7 @@ export default function MatchRoomScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.dark },
+  keyboardAvoid: { flex: 1 },
 
   /* Not found */
   notFound: {
@@ -476,7 +544,7 @@ const styles = StyleSheet.create({
     color: colors.mutedLight,
   },
 
-  /* Comments */
+  /* Chat messages */
   commentItem: {
     paddingVertical: spacing.sm,
     gap: 3,
@@ -494,6 +562,66 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: font.size.sm,
     lineHeight: 18,
+  },
+
+  /* Live chat card */
+  liveChatCard: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    overflow: 'hidden',
+  },
+  liveChatTitle: {
+    fontSize: font.size.xs,
+    fontWeight: font.weight.bold,
+    color: colors.muted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+  },
+  chatScroll: {
+    maxHeight: 220,
+  },
+  chatScrollContent: {
+    paddingBottom: spacing.xs,
+  },
+
+  /* Chat input */
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: colors.dark,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
+    color: colors.white,
+    fontSize: font.size.sm,
+  },
+  chatSendBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(232,0,45,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(232,0,45,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatSendBtnDisabled: {
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
   },
 
   /* Events */

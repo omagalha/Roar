@@ -67,7 +67,24 @@
     "viewReactions": "Ver reações",
     "liveChants": "Torcida ao vivo",
     "fanMeter": "Rugidômetro",
-    "highlights": "Melhores momentos"
+    "highlights": "Melhores momentos",
+    "chatPlaceholder": "Rugir na torcida...",
+    "chatSend": "Enviar"
+  },
+  "search": {
+    "placeholder": "Buscar pessoas e posts",
+    "people": "Pessoas",
+    "posts": "Posts",
+    "noResults": "Nenhum resultado",
+    "suggested": "Pessoas sugeridas"
+  },
+  "social": {
+    "follow": "Seguir",
+    "following": "Seguindo",
+    "followers": "seguidores",
+    "followingLabel": "seguindo",
+    "postsLabel": "posts",
+    "notFound": "Usuário não encontrado"
   },
   "profile": {
     "posts": "Posts",

@@ -67,7 +67,24 @@
     "viewReactions": "View reactions",
     "liveChants": "Live chants",
     "fanMeter": "Fan meter",
-    "highlights": "Best moments"
+    "highlights": "Best moments",
+    "chatPlaceholder": "Roar in the stands...",
+    "chatSend": "Send"
+  },
+  "search": {
+    "placeholder": "Search people and posts",
+    "people": "People",
+    "posts": "Posts",
+    "noResults": "No results",
+    "suggested": "Suggested people"
+  },
+  "social": {
+    "follow": "Follow",
+    "following": "Following",
+    "followers": "followers",
+    "followingLabel": "following",
+    "postsLabel": "posts",
+    "notFound": "User not found"
   },
   "profile": {
     "posts": "Posts",

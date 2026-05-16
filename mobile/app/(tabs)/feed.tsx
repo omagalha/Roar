@@ -3,6 +3,7 @@ import { FlatList, View, Text, StyleSheet, TouchableOpacity } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import { Ionicons } from '@expo/vector-icons'
 import { SocialPostCard, Post } from '@/components/feed/SocialPostCard'
 import { ComposerCard } from '@/components/feed/ComposerCard'
 import { CommentsSheet } from '@/components/feed/CommentsSheet'
@@ -49,6 +50,9 @@ export default function FeedTab() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>ROAR</Text>
+        <TouchableOpacity onPress={() => router.push('/search' as never)} hitSlop={12}>
+          <Ionicons name="search-outline" size={22} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
       {/* Abas internas */}
@@ -114,6 +118,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.dark },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,

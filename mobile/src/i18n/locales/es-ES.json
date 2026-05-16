@@ -67,7 +67,24 @@
     "viewReactions": "Ver reacciones",
     "liveChants": "Hinchada en vivo",
     "fanMeter": "Fanómetro",
-    "highlights": "Mejores momentos"
+    "highlights": "Mejores momentos",
+    "chatPlaceholder": "Rugir en la hinchada...",
+    "chatSend": "Enviar"
+  },
+  "search": {
+    "placeholder": "Buscar personas y posts",
+    "people": "Personas",
+    "posts": "Posts",
+    "noResults": "Sin resultados",
+    "suggested": "Personas sugeridas"
+  },
+  "social": {
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "followers": "seguidores",
+    "followingLabel": "siguiendo",
+    "postsLabel": "posts",
+    "notFound": "Usuario no encontrado"
   },
   "profile": {
     "posts": "Posts",
